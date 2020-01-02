@@ -11,8 +11,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    ThemeNotifier themeNotifier = Provider.of<ThemeNotifier>(context);
-    EdgeInsets windowPadding = Provider.of<EdgeInsets>(context);
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
+    final windowPadding = MediaQuery.of(context).padding;
     return SingleChildScrollView(
       child: Column(
         children: <Widget>[
@@ -22,7 +22,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ListTile(
             title: Text(
               'Theme',
-              style: Theme.of(context).textTheme.display1,
+              style: Theme.of(context).textTheme.body2,
             ),
           ),
           SwitchListTile(
@@ -36,7 +36,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ListTile(
             title: Text(
               'Other Settings',
-              style: Theme.of(context).textTheme.display1,
+              style: Theme.of(context).textTheme.subtitle,
             ),
           ),
           SwitchListTile(

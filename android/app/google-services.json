@@ -1,0 +1,99 @@
+{
+  "project_info": {
+    "project_number": "807187902976",
+    "firebase_url": "https://bolt12345.firebaseio.com",
+    "project_id": "bolt12345",
+    "storage_bucket": "bolt12345.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:807187902976:android:48d7548a5d49f397",
+        "android_client_info": {
+          "package_name": "com.hci.bolt"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "807187902976-3jm8fkh661n8p60nd5t3fjp3c6ut0f7u.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hci.bolt",
+            "certificate_hash": "dac6dac1337272a5a52be26ab38466f4fa0e8529"
+          }
+        },
+        {
+          "client_id": "807187902976-mi2jn85mqts7ummgss7jkohvulg1l6gf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hci.bolt",
+            "certificate_hash": "dee6d979746272b1b0d88c336237f1f816deb934"
+          }
+        },
+        {
+          "client_id": "807187902976-7av6iahelhpl25mptsejpc8rgoolht3e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD0L6crTFbUqLlXKiz-kxlLMhthi1hrcB0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "807187902976-7av6iahelhpl25mptsejpc8rgoolht3e.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "807187902976-qqgs8mh577c9jrbuais3bb1uu03qpsni.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.hci.bolt"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:807187902976:android:eca3e9341529c9b381dee5",
+        "android_client_info": {
+          "package_name": "com.hci.bolt_vendors"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "807187902976-7av6iahelhpl25mptsejpc8rgoolht3e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD0L6crTFbUqLlXKiz-kxlLMhthi1hrcB0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "807187902976-7av6iahelhpl25mptsejpc8rgoolht3e.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "807187902976-qqgs8mh577c9jrbuais3bb1uu03qpsni.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.hci.bolt"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

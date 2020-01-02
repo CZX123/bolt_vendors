@@ -1,4 +1,4 @@
-package com.example.bolt_vendors
+package com.hci.bolt_vendors
 
 import android.os.Bundle
 

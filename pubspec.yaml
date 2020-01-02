@@ -14,18 +14,20 @@ description: A new Flutter project.
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.1.0 <3.0.0"
+  sdk: ">=2.6.0 <3.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
-
   firebase_core: ^0.4.0
-  provider: ^3.0.0+1
+  provider: ^4.0.0
   shared_preferences: ^0.5.2
   path_provider: ^1.1.0
+  firebase_auth: ^0.15.0+1
   firebase_database: ^3.0.0
   firebase_storage: ^3.0.0
+  time: ^1.2.0
+  cloud_functions: ^0.4.1+6
 
 dev_dependencies:
   flutter_test:
@@ -42,6 +44,12 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  fonts:
+    - family: Manrope
+      fonts:
+        - asset: assets/fonts/Manrope-Semibold.otf
+        - asset: assets/fonts/Manrope-Bold.otf
+          weight: 700
 
   # To add assets to your application, add an assets section, like this:
   # assets:

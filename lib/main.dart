@@ -1,20 +1,69 @@
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'settings.dart';
-import 'src/widgets/animated_fade.dart';
-import 'src/widgets/dismissible_card.dart';
-import 'theme.dart';
+import 'library.dart';
 
 void main() => runApp(BoltApp());
 
-class BoltApp extends StatelessWidget {
+class BoltApp extends StatefulWidget {
+  @override
+  _BoltAppState createState() => _BoltAppState();
+}
+
+class _BoltAppState extends State<BoltApp> {
+  final _themeNotifier = ThemeNotifier();
+
+  Stream<StallMenuMap> _stallMenuStream;
+  void _initStallMenuStream() {
+    _stallMenuStream = FirebaseDatabase.instance
+        .reference()
+        .child('stallMenu')
+        .onValue
+        .map<StallMenuMap>((event) {
+      if (event == null) return null;
+      Map map;
+      try {
+        map = Map.from(event.snapshot.value);
+      } catch (e) {
+        map = List.from(event.snapshot.value).asMap();
+      }
+      Map<StallId, StallMenu> stallMenus = {};
+      map.forEach((key, value) {
+        final id = StallId(key is int ? key : int.tryParse(key));
+        if (id.value != null) {
+          stallMenus[id] = StallMenu.fromJson(id, value);
+        }
+      });
+      return StallMenuMap(stallMenus);
+    });
+  }
+
+  @override
+  void dispose() {
+    _themeNotifier.dispose();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Get theme preference from SharedPreferences when first initialising HomeState, and set accordingly
+    SharedPreferences.getInstance().then((prefs) {
+      _themeNotifier.isDarkMode = prefs.getBool('isDarkMode') ?? false;
+    });
+    _initStallMenuStream();
+  }
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(
-          value: ThemeNotifier(),
+          value: _themeNotifier,
+        ),
+        // Stream of stall menus
+        StreamProvider.value(
+          value: _stallMenuStream,
+        ),
+        Provider.value(
+          value: StallId(0),
         ),
       ],
       child: Consumer<ThemeNotifier>(
@@ -36,214 +85,115 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  EdgeInsets windowPadding;
+  final _isCollection = ValueNotifier(false);
+  GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
 
   @override
-  void initState() {
-    super.initState();
-    // Get theme preference from SharedPreferences when first initialising HomeState, and set accordingly
-    SharedPreferences.getInstance().then((prefs) {
-      Provider.of<ThemeNotifier>(context).isDarkMode =
-          prefs.getBool('isDarkMode') ?? false;
-    });
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Combines both padding and viewInsets, since on Android the bottom padding due to navigation bar is actually in the viewInsets, not the padding
-    windowPadding =
-        MediaQuery.of(context).padding + MediaQuery.of(context).viewInsets;
+  void dispose() {
+    _isCollection.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Provider<EdgeInsets>.value(
-      value: windowPadding,
-      child: Scaffold(
-        resizeToAvoidBottomInset: false,
-        drawer: Drawer(
-          child: SettingsPage(),
+    final width = MediaQuery.of(context).size.width;
+    return Scaffold(
+      key: _scaffoldKey,
+      backgroundColor: Theme.of(context).canvasColor,
+      resizeToAvoidBottomInset: false,
+      drawer: Drawer(
+        child: SettingsPage(),
+      ),
+      body: ValueListenableBuilder<bool>(
+        valueListenable: _isCollection,
+        builder: (context, value, child) {
+          return AnimatedSwitcher(
+            transitionBuilder: (child, animation) {
+              final opacity = animation.drive(Tween(
+                begin: -1.0,
+                end: 1.0,
+              ));
+              final position = CurvedAnimation(
+                curve: Curves.fastOutSlowIn,
+                parent: animation,
+              ).drive(Tween(
+                begin: Offset(0, 64),
+                end: Offset.zero,
+              ));
+              return FadeTransition(
+                opacity: opacity,
+                child: ValueListenableBuilder<double>(
+                  valueListenable: animation,
+                  builder: (context, value, child) {
+                    Offset offset = position.value;
+                    if (animation.status == AnimationStatus.reverse) {
+                      offset *= -1.0;
+                    }
+                    return Transform.translate(
+                      offset: offset,
+                      child: child,
+                    );
+                  },
+                  child: child,
+                ),
+              );
+            },
+            duration: const Duration(milliseconds: 300),
+            child: OrderCollectionScreen(
+              key: ValueKey(value),
+              isCollection: value,
+            ),
+          );
+        },
+      ),
+      bottomNavigationBar: DecoratedBox(
+        decoration: BoxDecoration(
+          boxShadow: kElevationToShadow[4],
         ),
-        body: Column(
-          children: <Widget>[
-            SizedBox(
-              height: 8 + windowPadding.top,
-            ),
-            DismissibleCard(
-              key: UniqueKey(),
-              onDismiss: (direction) {
-                print(direction);
-              },
-              background: (context, animation, cardWidth, isDismissed) {
-                Animation<Offset> offset = Tween<Offset>(
-                  begin: Offset(-0.5, 0),
-                  end: Offset(0, 0),
-                ).animate(animation);
-                Animation<double> opacity = CurvedAnimation(
-                  parent: animation,
-                  curve: Interval(0.1, 0.2),
-                );
-                return Stack(
-                  fit: StackFit.passthrough,
-                  children: <Widget>[
-                    Container(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.greenAccent.withOpacity(0.3)
-                          : Colors.green,
-                    ),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: SlideTransition(
-                        position: offset,
-                        child: FadeTransition(
-                          opacity: opacity,
-                          child: Container(
-                            width: cardWidth,
-                            alignment: Alignment.center,
-                            child: AnimatedFade(
-                              opacity: isDismissed ? 0 : 1,
-                              child: Icon(
-                                Icons.check,
-                                size: 36,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              },
-              secondaryBackground:
-                  (context, animation, cardWidth, isDismissed) {
-                Animation<Offset> offset = Tween<Offset>(
-                  begin: Offset(0.5, 0),
-                  end: Offset(0, 0),
-                ).animate(animation);
-                Animation<double> opacity = CurvedAnimation(
-                  parent: animation,
-                  curve: Interval(0.1, 0.2),
-                );
-                return Stack(
-                  fit: StackFit.passthrough,
-                  children: <Widget>[
-                    Container(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.pink.withOpacity(0.3)
-                          : Colors.red,
-                    ),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: SlideTransition(
-                        position: offset,
-                        child: FadeTransition(
-                          opacity: opacity,
-                          child: Container(
-                            width: cardWidth,
-                            alignment: Alignment.center,
-                            child: AnimatedFade(
-                              opacity: isDismissed ? 0 : 1,
-                              child: Icon(
-                                Icons.delete,
-                                size: 36,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              },
-              child: Container(
-                height: 200,
-                alignment: Alignment.center,
-                child: Text('Hello World!'),
-              ),
-            ),
-            const SizedBox(
-              height: 12,
-            ),
-            Center(
-              child: RaisedButton(
-                child: Text('Reset'),
+        child: BottomAppBar(
+          elevation: 0,
+          color: Theme.of(context).cardColor,
+          child: Row(
+            children: <Widget>[
+              IconButton(
+                icon: const Icon(Icons.menu),
                 onPressed: () {
-                  setState(() {});
+                  _scaffoldKey.currentState.openDrawer();
                 },
               ),
-            ),
-          ],
+              SizedBox(
+                width: (width - 192 - 40 * 2) / 2,
+              ),
+              SizedBox(
+                width: 192,
+                child: ValueListenableBuilder<bool>(
+                  valueListenable: _isCollection,
+                  builder: (context, value, child) {
+                    return BottomNavigationBar(
+                      currentIndex: value ? 1 : 0,
+                      backgroundColor: Theme.of(context).cardColor,
+                      fixedColor: Theme.of(context).primaryColorDark,
+                      elevation: 0,
+                      items: [
+                        BottomNavigationBarItem(
+                          icon: const Icon(Icons.restaurant),
+                          title: const Text('Orders'),
+                        ),
+                        BottomNavigationBarItem(
+                          icon: const Icon(Icons.room_service),
+                          title: const Text('Collection'),
+                        ),
+                      ],
+                      onTap: (index) {
+                        _isCollection.value = index == 1;
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
-        // body: ListView.builder(
-        //   itemCount: items.length,
-        //   itemBuilder: (context, index) {
-        //     final item = items[index];
-
-        //     return ClipPath(
-        //       clipBehavior: Clip.antiAlias,
-        //       clipper: ShapeBorderClipper(
-        //         shape: ContinuousRectangleBorder(
-        //           borderRadius: BorderRadius.circular(24),
-        //         ),
-        //       ),
-        //       // TODO: Use Custom Dismissable, current one won't fulfill our needs
-        //       child: Dismissible(
-        //         // Each Dismissible must contain a Key. Keys allow Flutter to
-        //         // uniquely identify widgets.
-        //         key: Key(item),
-        //         // Provide a function that tells the app
-        //         // what to do after an item has been swiped away.
-        //         onDismissed: (direction) {
-        //           // Remove the item from the data source.
-        //           setState(() {
-        //             items.removeAt(index);
-        //           });
-        //         },
-        //         // Show a red background as the item is swiped away.
-        //         secondaryBackground: ClipPath(
-        //           clipBehavior: Clip.antiAlias,
-        //           clipper: ShapeBorderClipper(
-        //             shape: ContinuousRectangleBorder(
-        //               borderRadius: BorderRadius.circular(24),
-        //             ),
-        //           ),
-        //           child: Container(
-        //             height: 200,
-        //             color: Colors.red,
-        //           ),
-        //         ),
-        //         background: ClipPath(
-        //           clipBehavior: Clip.antiAlias,
-        //           clipper: ShapeBorderClipper(
-        //             shape: ContinuousRectangleBorder(
-        //               borderRadius: BorderRadius.circular(24),
-        //             ),
-        //           ),
-        //           child: Container(
-        //             height: 200,
-        //             color: Colors.green,
-        //           ),
-        //         ),
-        //         child: Material(
-        //           color: Theme.of(context).cardColor,
-        //           shape: ContinuousRectangleBorder(
-        //             borderRadius: BorderRadius.circular(24),
-        //           ),
-        //           clipBehavior: Clip.antiAlias,
-        //           elevation: 8,
-        //           child: Container(
-        //             height: 200,
-        //             alignment: Alignment.center,
-        //             child: Text(item),
-        //           ),
-        //         ),
-        //       ),
-        //     );
-        //   },
-        // ),
       ),
     );
   }

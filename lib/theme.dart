@@ -13,6 +13,7 @@ class ThemeNotifier with ChangeNotifier {
     });
     notifyListeners();
   }
+
   bool get isDarkMode => _isDarkMode;
 
   ThemeData _currentThemeData = themeList[0];
@@ -26,98 +27,101 @@ List<ThemeData> themeList = [
     platform: TargetPlatform.iOS,
     fontFamily: 'Manrope',
     brightness: Brightness.light,
-    primaryColor: Color(0xFFFFC800),
-    primaryColorLight: Color(0xFFFEFDE8), // Ignore this light dark thing, they're the same
-    primaryColorDark: Color(0xFFFEFDE8),
-    accentColor: Color(0xFFFFF1C1),
-    scaffoldBackgroundColor: Color(0xFFFCFAF4),
-    canvasColor: Color(0xFFF9F6EA),
+    primaryColor: Color(0xFFFFCB00),
+    primaryColorDark: Color(0xFFEDA200),
+    accentColor: Color(0xFF54D2D2),
+    scaffoldBackgroundColor: Color(0xFF072448),
+    canvasColor: Color(0xFFDEE0E6),
+    cardColor: Color(0xFFEDEFF5),
     textTheme: textTheme.merge(lightThemeText),
-    toggleableActiveColor: Color(0xFF2176FF),
+    toggleableActiveColor: Color(0xFFFFCB00),
   ),
   ThemeData(
     platform: TargetPlatform.iOS,
     fontFamily: 'Manrope',
     brightness: Brightness.dark,
-    primaryColor: Color(0xFF2176FF),
-    primaryColorLight: Color(0xFF081F44),
-    primaryColorDark: Color(0xFF081F44),
-    accentColor: Color(0xFFFFC800),
-    scaffoldBackgroundColor: Color(0xFF000A14),
-    canvasColor: Color(0xFF020F1C),
+    primaryColor: Color(0xFF54D2D2),
+    primaryColorDark: Color(0xFFFFCB00),
+    accentColor: Color(0xFFFFCB00),
+    scaffoldBackgroundColor: Color(0xFF021124),
+    canvasColor: Color(0xFF0F1824),
+    cardColor: Color(0xFF262F3B),
     appBarTheme: AppBarTheme(
-      color: Color(0xFF0A1826),
+      color: Color(0xFF54D2D2),
     ),
     textTheme: textTheme.merge(darkThemeText),
-    toggleableActiveColor: Color(0xFFFFC800),
+    toggleableActiveColor: Color(0xFFFFCB00),
   ),
 ];
 
 TextTheme textTheme = const TextTheme(
-  body1: const TextStyle(
-    height: 0.8,
-  ),
-  body2: const TextStyle(
-    height: 0.8,
-  ),
-  title: const TextStyle(
-    height: 0.8,
-  ),
-  subtitle: const TextStyle(
-    height: 0.8,
-    fontSize: 12.0,
-  ),
-  button: const TextStyle(
-    height: 0.8,
-  ),
-  display1: const TextStyle(
-    height: 0.8,
-    fontSize: 14.0,
-    fontWeight: FontWeight.w700,
-  ),
-  display2: const TextStyle(
-    height: 0.8,
-    fontSize: 20.0,
+  display4: const TextStyle(
+    fontSize: 64,
     fontWeight: FontWeight.w700,
   ),
   display3: const TextStyle(
-    height: 0.8,
-    fontSize: 36.0,
+    fontSize: 36,
     fontWeight: FontWeight.w700,
   ),
-  display4: const TextStyle(
-    height: 0.8,
-    fontSize: 48.0,
+  display2: const TextStyle(
+    fontSize: 28,
+    //fontWeight: FontWeight.w500,
+  ),
+  display1: const TextStyle(
+    fontSize: 24,
     fontWeight: FontWeight.w700,
+  ),
+  headline: const TextStyle(
+    fontSize: 22,
+  ),
+  subhead: const TextStyle(
+    fontSize: 18,
+    //fontWeight: FontWeight.w500,
+  ),
+  title: const TextStyle(
+    fontSize: 18,
+    fontWeight: FontWeight.w700,
+  ),
+  subtitle: const TextStyle(
+    fontSize: 16,
+    //fontWeight: FontWeight.w500,
+  ),
+  body2: const TextStyle(
+    fontSize: 15,
+    fontWeight: FontWeight.w700,
+  ),
+  body1: const TextStyle(
+    fontSize: 15,
+    fontWeight: FontWeight.w500,
   ),
 );
 
 const TextTheme lightThemeText = TextTheme(
-  display2: TextStyle(
+  display4: TextStyle(
     color: Colors.black87,
   ),
   display3: TextStyle(
     color: Colors.black87,
   ),
-  display4: TextStyle(
+  display2: TextStyle(
     color: Colors.black87,
   ),
-  subtitle: TextStyle(
-    color: Colors.black54,
+  display1: TextStyle(
+    color: Colors.black87,
   ),
 );
 
 const TextTheme darkThemeText = TextTheme(
-  display2: TextStyle(
+  display4: TextStyle(
     color: Colors.white,
   ),
   display3: TextStyle(
     color: Colors.white,
   ),
-  display4: TextStyle(
+  display2: TextStyle(
     color: Colors.white,
   ),
-  subtitle: TextStyle(
-    color: Colors.white70,
+  display1: TextStyle(
+    color: Colors.white,
   ),
 );
