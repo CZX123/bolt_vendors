@@ -1,3 +1,5 @@
+// Borrowed from the student app
+
 import '../library.dart';
 
 /// A class that contains the stall id, which is an [int]

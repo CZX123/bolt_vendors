@@ -1,10 +1,10 @@
-import '../library.dart';
+import '../../library.dart';
 
 /// Code for both the orders and collection screen is shared as they are very similar
-class OrderCollectionScreen extends StatelessWidget {
+class OrdersCollectionScreen extends StatelessWidget {
   /// Whether the screen is the collection screen
   final bool isCollection;
-  const OrderCollectionScreen({
+  const OrdersCollectionScreen({
     Key key,
     this.isCollection = false,
   }) : super(key: key);
@@ -25,23 +25,30 @@ class OrderCollectionScreen extends StatelessWidget {
             ),
           ),
         ),
-        FirebaseSliverAnimatedList(
-          query: FirebaseDatabase.instance
-              .reference()
-              .child('stallOrders/$stallId'),
-          itemBuilder: (context, snapshot, animation, index) {
-            return OrderGroupCard(
-              data: snapshot,
-              animation: animation,
-              isCollection: isCollection,
-            );
-          },
+        SliverPadding(
+          padding: const EdgeInsets.only(
+            bottom: 4,
+          ),
+          sliver: FirebaseSliverAnimatedList(
+            query: FirebaseDatabase.instance
+                .reference()
+                .child('stallOrders/$stallId'),
+            itemBuilder: (context, snapshot, animation, index) {
+              return OrderGroupCard(
+                key: ValueKey(snapshot.key),
+                data: snapshot,
+                animation: animation,
+                isCollection: isCollection,
+              );
+            },
+          ),
         ),
       ],
     );
   }
 }
 
+/// A card containing orders at a specific time
 class OrderGroupCard extends StatefulWidget {
   final DataSnapshot data;
   final Animation<double> animation;
@@ -60,25 +67,28 @@ class OrderGroupCard extends StatefulWidget {
 }
 
 class _OrderGroupCardState extends State<OrderGroupCard> {
-  static const duration = Duration(milliseconds: 200);
+  static const duration = Duration(milliseconds: 300);
   FirebaseAnimatedListItemBuilder itemBuilder;
   List<DataSnapshot> _model;
   final GlobalKey<AnimatedListState> _animatedListKey =
       GlobalKey<AnimatedListState>();
   bool _loaded = false;
-  String _formattedTime;
+  TimeOfDay _time;
 
   @override
   void initState() {
     super.initState();
     itemBuilder = (context, snapshot, animation, index) {
       return OrderCard(
+        key: ValueKey(snapshot.key),
+        time: _time,
         data: snapshot,
         animation: animation,
         isCollection: widget.isCollection,
         last: index == _model.length - 1,
       );
     };
+    _time ??= widget.data.key.toTime();
   }
 
   @override
@@ -97,7 +107,6 @@ class _OrderGroupCardState extends State<OrderGroupCard> {
       onChildMoved: _onChildMoved,
       onValue: _onValue,
     );
-    _formattedTime ??= widget.data.key.toTime().format(context);
   }
 
   @override
@@ -146,42 +155,6 @@ class _OrderGroupCardState extends State<OrderGroupCard> {
     return itemBuilder(context, _model[index], animation, index);
   }
 
-  Future<bool> _showRejectionDialog() {
-    return showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Reject all orders at $_formattedTime?'),
-          actions: <Widget>[
-            FlatButton(
-              child: const Text('No'),
-              onPressed: () {
-                Navigator.pop(context, false);
-              },
-            ),
-            FlatButton(
-              child: const Text('Yes'),
-              onPressed: () {
-                Navigator.pop(context, true);
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<DismissAction> _onDismiss(DismissDirection direction) async {
-    if (direction == DismissDirection.endToStart && !widget.isCollection) {
-      final rejection = await _showRejectionDialog();
-      if (rejection == null || !rejection) {
-        return DismissAction.abort;
-      }
-    }
-    // Call Cloud Function for rejectAllOrdersAtTime
-    return DismissAction.stay;
-  }
-
   @override
   Widget build(BuildContext context) {
     return SizeTransition(
@@ -195,7 +168,15 @@ class _OrderGroupCardState extends State<OrderGroupCard> {
           end: 1.0,
         )),
         child: DismissibleCard(
-          onDismiss: _onDismiss,
+          onDismiss: (direction) {
+            return OrderSwipeAPI.dismissAllOrdersAtTime(
+              context: context,
+              direction: direction,
+              isCollection: widget.isCollection,
+              stallId: Provider.of<StallId>(context),
+              time: _time,
+            );
+          },
           padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
           backgroundColor: Colors.green,
           backgroundIcon: const Icon(
@@ -213,13 +194,11 @@ class _OrderGroupCardState extends State<OrderGroupCard> {
           builder: (gestureDetector) {
             return Container(
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   gestureDetector(
                     child: Container(
-                      height: 56,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                      ),
+                      padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         border: Border(
                           bottom: BorderSide(
@@ -228,10 +207,22 @@ class _OrderGroupCardState extends State<OrderGroupCard> {
                           ),
                         ),
                       ),
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        _formattedTime,
-                        style: Theme.of(context).textTheme.body2,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Text(
+                            _time.format(context),
+                            style: Theme.of(context).textTheme.body2,
+                          ),
+                          Text(
+                            _model.length == 0
+                                ? 'No orders'
+                                : _model.length == 1
+                                    ? '1 order'
+                                    : '${_model.length} orders',
+                            style: Theme.of(context).textTheme.caption,
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -255,13 +246,16 @@ class _OrderGroupCardState extends State<OrderGroupCard> {
   }
 }
 
+/// An individual order
 class OrderCard extends StatefulWidget {
+  final TimeOfDay time;
   final DataSnapshot data;
   final Animation<double> animation;
   final bool isCollection;
   final bool last;
   const OrderCard({
     Key key,
+    @required this.time,
     @required this.data,
     @required this.animation,
     this.isCollection = false,
@@ -273,7 +267,6 @@ class OrderCard extends StatefulWidget {
 }
 
 class _OrderCardState extends State<OrderCard> {
-
   List<Widget> _generateDishOptions(List<DishOption> options) {
     return options.map((option) {
       return Container(
@@ -311,10 +304,12 @@ class _OrderCardState extends State<OrderCard> {
       final Dish menuDish = stallMenu.firstWhere((menuDish) {
         return menuDish.id == id;
       });
-      final List<DishOption> options =
-          (dish['options'] as List).map((optionId) {
-        return menuDish.options.firstWhere((option) => optionId == option.id);
-      }).toList();
+      final List<DishOption> options = dish['options'] != null
+          ? (dish['options'] as List).map((optionId) {
+              return menuDish.options
+                  .firstWhere((option) => optionId == option.id);
+            }).toList()
+          : [];
       final int quantity = dish['quantity'];
       return Padding(
         padding: const EdgeInsets.only(bottom: 4),
@@ -336,92 +331,77 @@ class _OrderCardState extends State<OrderCard> {
     }).toList();
   }
 
-  Future<bool> _showRejectionDialog() {
-    return showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Reject order #${widget.data.key}?'),
-          actions: <Widget>[
-            FlatButton(
-              child: const Text('No'),
-              onPressed: () {
-                Navigator.pop(context, false);
-              },
-            ),
-            FlatButton(
-              child: const Text('Yes'),
-              onPressed: () {
-                Navigator.pop(context, true);
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<DismissAction> _onDismiss(DismissDirection direction) async {
-    if (direction == DismissDirection.endToStart && !widget.isCollection) {
-      final rejection = await _showRejectionDialog();
-      if (rejection == null || !rejection) {
-        return DismissAction.abort;
-      }
-    }
-    // Call Cloud Function for rejectAllOrdersAtTime
-    return DismissAction.stay;
-  }
-
   @override
   Widget build(BuildContext context) {
-    return ClipRect(
-      child: DismissibleCard(
-        onDismiss: _onDismiss,
-        backgroundColor: Colors.green,
-        backgroundIcon: const Icon(
-          Icons.check,
-          color: Colors.white,
-          size: 28,
-        ),
-        secondaryBackgroundColor:
-            widget.isCollection ? Colors.orange : Colors.red,
-        secondaryBackgroundIcon: Icon(
-          widget.isCollection ? Icons.undo : Icons.delete,
-          color: Colors.white,
-          size: 28,
-        ),
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(
-                color: Theme.of(context).dividerColor,
-                width: .4,
-              ),
-              bottom: widget.last
-                  ? BorderSide.none
-                  : BorderSide(
-                      color: Theme.of(context).dividerColor,
-                      width: .4,
-                    ),
+    return SizeTransition(
+      sizeFactor: CurvedAnimation(
+        curve: Curves.fastOutSlowIn,
+        parent: widget.animation,
+      ),
+      child: FadeTransition(
+        opacity: widget.animation.drive(Tween(
+          begin: -1.0,
+          end: 1.0,
+        )),
+        child: ClipRect(
+          child: DismissibleCard(
+            onDismiss: (direction) {
+              return OrderSwipeAPI.dismissOrder(
+                context: context,
+                direction: direction,
+                isCollection: widget.isCollection,
+                stallId: Provider.of<StallId>(context),
+                time: widget.time,
+                orderId: widget.data.key,
+              );
+            },
+            backgroundColor: Colors.green,
+            backgroundIcon: const Icon(
+              Icons.check,
+              color: Colors.white,
+              size: 28,
             ),
-          ),
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              Text(
-                '#${widget.data.key}',
-                style: Theme.of(context).textTheme.display1,
+            secondaryBackgroundColor:
+                widget.isCollection ? Colors.orange : Colors.red,
+            secondaryBackgroundIcon: Icon(
+              widget.isCollection ? Icons.undo : Icons.delete,
+              color: Colors.white,
+              size: 28,
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    color: Theme.of(context).dividerColor,
+                    width: .4,
+                  ),
+                  bottom: widget.last
+                      ? BorderSide.none
+                      : BorderSide(
+                          color: Theme.of(context).dividerColor,
+                          width: .4,
+                        ),
+                ),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: _generateDishes(),
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Text(
+                    '#${widget.data.key}',
+                    style: Theme.of(context).textTheme.display1,
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: _generateDishes(),
+                  ),
+                ],
               ),
-            ],
+            ),
+            shape: RoundedRectangleBorder(),
+            padding: EdgeInsets.zero,
           ),
         ),
-        shape: RoundedRectangleBorder(),
-        padding: EdgeInsets.zero,
       ),
     );
   }

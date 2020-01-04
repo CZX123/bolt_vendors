@@ -29,13 +29,12 @@ export 'general.dart';
 export 'main.dart';
 export 'settings.dart';
 export 'theme.dart';
-export 'src/data.dart';
 export 'src/stall_data.dart';
-export 'src/orders_collection.dart';
+export 'src/orders_collection/order_swipe_api.dart';
+export 'src/orders_collection/orders_collection_screen.dart';
 export 'src/images/error_image.dart';
 export 'src/images/transparent_image.dart';
-export 'src/widgets/dismissible/grouped_dismissible_list.dart';
-export 'src/widgets/dismissible/dismissible_card.dart';
+export 'src/widgets/dismissible_card.dart';
 export 'src/widgets/firebase.dart';
 export 'src/widgets/firebase_sliver_animated_list.dart';
 

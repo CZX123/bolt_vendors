@@ -139,7 +139,7 @@ class _HomeState extends State<Home> {
               );
             },
             duration: const Duration(milliseconds: 300),
-            child: OrderCollectionScreen(
+            child: OrdersCollectionScreen(
               key: ValueKey(value),
               isCollection: value,
             ),

@@ -95,7 +95,7 @@ extension TimeOfDayFromNumExtension<T extends num> on T {
   }
 }
 
-extension NumParseExtension on String {
+extension TypeConversionExtension on String {
   int toInt() {
     return int.parse(this);
   }
@@ -107,9 +107,7 @@ extension NumParseExtension on String {
   num toNum() {
     return num.parse(this);
   }
-}
 
-extension TimeOfDayFromStringExtension on String {
   /// Returns a [TimeOfDay] from a string in 24h format, with hours and minutes separated by a colon. E.g. `10:30`, `15:45`
   TimeOfDay toTime() {
     final hoursAndMinutes = this.split(':');
@@ -119,4 +117,12 @@ extension TimeOfDayFromStringExtension on String {
       minute: hoursAndMinutes.last.toInt(),
     );
   }
+}
+
+extension BuildContextExtension on BuildContext {
+  ThemeData get theme => Theme.of(this);
+  MediaQueryData get mediaQuery => MediaQuery.of(this);
+  Size get windowSize => MediaQuery.of(this).size;
+  EdgeInsets get windowPadding => MediaQuery.of(this).padding;
+  EdgeInsets get windowInsets => MediaQuery.of(this).viewInsets;
 }

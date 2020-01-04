@@ -10,7 +10,8 @@ const Curve kResizeTimeCurve = Interval(0.4, 1.0, curve: Curves.ease);
 const double kMinDismissVelocity = 700;
 
 typedef DismissCallback = Future<DismissAction> Function(
-    DismissDirection direction);
+  DismissDirection direction,
+);
 
 enum DismissAction {
   /// Collapses the card
@@ -53,7 +54,7 @@ class DismissibleCard extends StatefulWidget {
       borderRadius: BorderRadius.all(Radius.circular(12)),
     ),
     this.elevation: 2,
-    this.highlightElevation: 6,
+    this.highlightElevation: 4,
   }) : super(key: key);
 
   _DismissibleCardState createState() => _DismissibleCardState();
@@ -81,39 +82,33 @@ class _DismissibleCardState extends State<DismissibleCard>
     double velocity = details.primaryVelocity;
     if (velocity == 0 &&
         (mainController.value < 0.25 || mainController.value > 0.75)) {
-      mainController
-          .animateTo(
-            mainController.value > 0.5 ? 1 : 0,
-            duration: Duration(milliseconds: 200),
-            curve: Curves.fastOutSlowIn.flipped,
-          )
-          .then(onAnimEnd);
+      mainController.animateTo(
+        mainController.value > 0.5 ? 1 : 0,
+        duration: Duration(milliseconds: 200),
+        curve: Curves.fastOutSlowIn.flipped,
+      );
+      onAnimEnd();
       return;
     }
     if (mainController.value > 0.75 ||
         velocity > kMinDismissVelocity && mainController.value >= 0.5) {
       if (velocity < 400) velocity = 400;
-      mainController
-          .animateWith(BoundedFrictionSimulation(
-              1.5, mainController.value, velocity / windowWidth, 0, 1))
-          .then(onAnimEnd);
-      // setState(() {
-      //   dismissed = true;
-      // });
+      mainController.animateWith(BoundedFrictionSimulation(
+          1.5, mainController.value, velocity / windowWidth, 0, 1));
+      onAnimEnd();
     } else if (mainController.value < 0.25 ||
         velocity < -kMinDismissVelocity && mainController.value <= 0.5) {
       if (velocity > -400) velocity = -400;
-      mainController
-          .animateWith(BoundedFrictionSimulation(
-              1.5, mainController.value, velocity / windowWidth, 0, 1))
-          .then(onAnimEnd);
+      mainController.animateWith(BoundedFrictionSimulation(
+          1.5, mainController.value, velocity / windowWidth, 0, 1));
+      onAnimEnd();
     } else {
       mainController.animateWith(ScrollSpringSimulation(
           spring, mainController.value, 0.5, velocity / windowWidth));
     }
   }
 
-  void onAnimEnd(_) async {
+  void onAnimEnd() async {
     final dismissAction = await widget.onDismiss(mainController.value > 0.5
         ? DismissDirection.startToEnd
         : DismissDirection.endToStart);
@@ -302,7 +297,11 @@ class _DismissibleCardState extends State<DismissibleCard>
           duration: Duration(milliseconds: 250),
           padding: dismissed
               ? EdgeInsets.fromLTRB(
-                  widget.padding.left, 0, widget.padding.right, 0)
+                  widget.padding.left,
+                  0,
+                  widget.padding.right,
+                  0,
+                )
               : widget.padding,
           child: SlideTransition(
             position: Tween<Offset>(
