@@ -14,6 +14,18 @@ class OrderSwipeAPI {
   static final _removeOrder = CloudFunctions.instance.getHttpsCallable(
     functionName: 'removeOrder',
   );
+  static final _rejectOrdersAtTime = CloudFunctions.instance.getHttpsCallable(
+    functionName: 'rejectOrdersAtTime',
+  );
+  static final _completeOrdersAtTime = CloudFunctions.instance.getHttpsCallable(
+    functionName: 'completeOrdersAtTime',
+  );
+  static final _undoCompleteOrdersAtTime = CloudFunctions.instance.getHttpsCallable(
+    functionName: 'undoCompleteOrdersAtTime',
+  );
+  static final _removeOrdersAtTime = CloudFunctions.instance.getHttpsCallable(
+    functionName: 'removeOrdersAtTime',
+  );
 
   static String _formatTime(TimeOfDay time) {
     String _addLeadingZeroIfNeeded(int value) {
@@ -87,7 +99,6 @@ class OrderSwipeAPI {
       }
     } else if (direction == DismissDirection.endToStart) {
       result = await _undoCompleteOrder.call(data);
-      print(result.data);
     } else {
       result = await _removeOrder.call(data);
     }
@@ -105,6 +116,11 @@ class OrderSwipeAPI {
     @required StallId stallId,
     @required TimeOfDay time,
   }) async {
+    final Map<String, dynamic> data = {
+      'stallId': stallId.value,
+      'time': _formatTime(time),
+    };
+    HttpsCallableResult result;
     if (!isCollection) {
       if (direction == DismissDirection.endToStart) {
         final rejection = await _showRejectionDialog(
@@ -114,19 +130,15 @@ class OrderSwipeAPI {
         if (rejection == null || !rejection) {
           return DismissAction.abort;
         }
-        // Cloud Function for rejectOrdersAtTime
+        result = await _rejectOrdersAtTime.call(data);
       } else {
-        // await _completeOrder.call({
-        //   'stallId': stallId.value,
-        //   'time': _formatTime(time),
-        // });
+        result = await _completeOrdersAtTime.call(data);
       }
     } else if (direction == DismissDirection.endToStart) {
-      // Cloud Function for undoCompleteOrdersAtTime
+      result = await _undoCompleteOrdersAtTime.call(data);
     } else {
-      // Cloud Function for removeOrdersAtTime
+      result = await _removeOrdersAtTime.call(data);
     }
-    // Call Cloud Function for rejectAllOrdersAtTime
-    return DismissAction.stay;
+    return DismissAction.abort;
   }
 }

@@ -27,13 +27,14 @@ export 'package:time/time.dart';
 
 export 'general.dart';
 export 'main.dart';
-export 'settings.dart';
 export 'theme.dart';
 export 'src/stall_data.dart';
+export 'src/drawer/account_page.dart';
 export 'src/orders_collection/order_swipe_api.dart';
 export 'src/orders_collection/orders_collection_screen.dart';
 export 'src/images/error_image.dart';
 export 'src/images/transparent_image.dart';
+export 'src/widgets/custom_switcher.dart';
 export 'src/widgets/dismissible_card.dart';
 export 'src/widgets/firebase.dart';
 export 'src/widgets/firebase_sliver_animated_list.dart';

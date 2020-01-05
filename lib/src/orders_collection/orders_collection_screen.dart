@@ -202,7 +202,9 @@ class _OrderGroupCardState extends State<OrderGroupCard> {
                       decoration: BoxDecoration(
                         border: Border(
                           bottom: BorderSide(
-                            color: Theme.of(context).dividerColor,
+                            color: _model.length == 0
+                                ? Colors.transparent
+                                : Theme.of(context).dividerColor,
                             width: .4,
                           ),
                         ),

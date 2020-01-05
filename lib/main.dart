@@ -65,6 +65,20 @@ class _BoltAppState extends State<BoltApp> {
         Provider.value(
           value: StallId(0),
         ),
+        // Stream of stall balance
+        StreamProvider.value(
+          initialData: StallBalance(0),
+          value: FirebaseDatabase.instance
+              .reference()
+              .child('stalin')
+              .child('0')
+              .child('balance')
+              .onValue
+              .map((event) {
+            if (event?.snapshot?.value == null) return StallBalance(0);
+            return StallBalance(event.snapshot.value);
+          }),
+        ),
       ],
       child: Consumer<ThemeNotifier>(
         builder: (context, themeNotifier, child) {
@@ -102,7 +116,7 @@ class _HomeState extends State<Home> {
       backgroundColor: Theme.of(context).canvasColor,
       resizeToAvoidBottomInset: false,
       drawer: Drawer(
-        child: SettingsPage(),
+        child: AccountPage(),
       ),
       body: ValueListenableBuilder<bool>(
         valueListenable: _isCollection,
