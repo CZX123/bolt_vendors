@@ -113,7 +113,6 @@ class _HomeState extends State<Home> {
     final width = MediaQuery.of(context).size.width;
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: Theme.of(context).canvasColor,
       resizeToAvoidBottomInset: false,
       drawer: Drawer(
         child: AccountPage(),
@@ -166,7 +165,7 @@ class _HomeState extends State<Home> {
         ),
         child: BottomAppBar(
           elevation: 0,
-          color: Theme.of(context).cardColor,
+          color: Theme.of(context).canvasColor,
           child: Row(
             children: <Widget>[
               IconButton(
@@ -185,7 +184,7 @@ class _HomeState extends State<Home> {
                   builder: (context, value, child) {
                     return BottomNavigationBar(
                       currentIndex: value ? 1 : 0,
-                      backgroundColor: Theme.of(context).cardColor,
+                      backgroundColor: Theme.of(context).canvasColor,
                       fixedColor: Theme.of(context).primaryColorDark,
                       elevation: 0,
                       items: [
